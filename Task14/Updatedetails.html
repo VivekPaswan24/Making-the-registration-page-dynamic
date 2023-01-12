@@ -125,6 +125,7 @@
                     name.value = res.data.name
                     email.value = res.data.email
                     phone.value=res.data.phone
+                    list.removeChild(li)
                 })
                 .catch(err=>{
                     let li = document.createElement('li')
