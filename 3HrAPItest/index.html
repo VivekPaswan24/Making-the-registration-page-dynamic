@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Expense Tracker</h1>
+        <form id="myform">
+            <label for="amount" class="form-lebel">
+                <h5>Choose Expense amount</h5>
+            </label>
+            <input type="text" id="amount" class="form-control"><br>
+            <label for="des" class="form-lebel">
+                <h5>Choose Description</h5>
+            </label>
+            <input type="text" id="des" class="form-control"> <br>
+            <lebel for="cat">
+                <h5>Choose a category</h5>
+            </lebel>
+            <select class="form-select" id="cat">
+                <option>Movie</option>
+                <option>Food</option>
+                <option>On vacation</option>
+                <option>Car</option>
+            </select> <br>
+            <input type="submit" value="Add Expense" id="btn" class="btn btn-primary">
+        </form> <br>
+        <ul id="expense-list">
+        </ul>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/axios.min.js"></script>
+    <script>
+        const amt = document.getElementById('amount');
+        const des = document.getElementById('des')
+        const cat = document.getElementById('cat')
+        const list = document.getElementById('expense-list')
+        const addEXpes = document.getElementById('btn')
+        const form = document.getElementById('myform')
+        let edititem = null
+
+        form.addEventListener('submit', addDetailsToCrudCrud);
+        list.addEventListener('click', removeOrEditItem)
+
+        window.addEventListener('DOMContentLoaded', () => {
+            axios.get("https://crudcrud.com/api/29b9243dfda94b2a98fea76fad1b4d54/addDetails")
+                .then((res) => {
+                    for (let i = 0; i < res.data.length; i++) {
+                        showUserDetailsOnScreen(res.data[i].amount, res.data[i].description, res.data[i].category, res.data[i]._id)
+                    }
+                })
+                .catch((err) => {
+                    let li = document.createElement('li')
+                    li.appendChild(document.createTextNode('Something went wronng'))
+                    list.appendChild(li)
+                    console.log(err)
+                })
+        })
+        function addDetailsToCrudCrud(e) {
+            e.preventDefault()
+            let obj = {
+                amount: amt.value,
+                description: des.value,
+                category: cat.value
+            }
+            if (edititem === null) {
+                axios
+                    .post("https://crudcrud.com/api/29b9243dfda94b2a98fea76fad1b4d54/addDetails", obj)
+                    .then((res) => {
+                        showUserDetailsOnScreen(res.data.amount, res.data.description, res.data.category, res.data._id)
+                        console.log(res.data)
+                    })
+                    .catch((err) => {
+                        let li = document.createElement('li')
+                        li.appendChild(document.createTextNode('Something went wronng'))
+                        list.appendChild(li)
+                        console.log(err)
+                    })
+            } else {
+                axios.put("https://crudcrud.com/api/29b9243dfda94b2a98fea76fad1b4d54/addDetails" + edititem, obj)
+                    .then((res) => {
+                        showUserDetailsOnScreen(obj.amount, obj.description, obj.category);
+                    })
+                    .catch(err => {
+                        let li = document.createElement('li')
+                        li.appendChild(document.createTextNode('Something went wronng'))
+                        list.appendChild(li)
+                        console.log(err)
+                    })
+                edititem = null
+            }
+        }
+        function showUserDetailsOnScreen(a, b, c, d) {
+            let li = document.createElement('li')
+            li.setAttribute('id', d)
+            let editbtn = document.createElement('button')
+            editbtn.className = 'edit btn btn-success btn-sm'
+            editbtn.appendChild(document.createTextNode('Edit Expense'))
+            let delbtn = document.createElement('button')
+            delbtn.className = 'delete btn btn-danger btn-sm'
+            delbtn.appendChild(document.createTextNode('Delete Expense'))
+            let userDetails = document.createTextNode(`Expense Amount: ${a} - Description: ${b} - Category: ${c}`);
+            li.appendChild(userDetails)
+            li.appendChild(editbtn)
+            li.appendChild(delbtn)
+            list.appendChild(li)
+            amt.value = ''
+            des.value = ''
+            cat.value = ''
+        }
+
+
+        function removeOrEditItem(e) {
+            if (e.target.classList.contains('delete')) {
+                let li = e.target.parentElement
+                axios.delete("https://crudcrud.com/api/29b9243dfda94b2a98fea76fad1b4d54/addDetails" + "/" + li.id)
+                    .then(() => {
+                        list.removeChild(li)
+                    })
+                    .catch((err) => {
+                        let li = document.createElement('li')
+                        li.appendChild(document.createTextNode('Something went wronng'))
+                        list.appendChild(li)
+                        console.log(err)
+                    })
+            }
+            if (e.target.classList.contains('edit')) {
+                let li = e.target.parentElement
+                let id = "/" + li.id
+                axios.get("https://crudcrud.com/api/29b9243dfda94b2a98fea76fad1b4d54/addDetails" + id)
+                    .then((res) => {
+                        amt.value = res.data.amount
+                        des.value = res.data.description
+                        cat.value = res.data.category
+                        list.removeChild(li)
+                        edititem = id
+                    })
+                    .catch(err => {
+                        let li = document.createElement('li')
+                        li.appendChild(document.createTextNode('Something went wronng'))
+                        list.appendChild(li)
+                        console.log(err)
+                    })
+
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
